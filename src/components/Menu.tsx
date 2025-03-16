@@ -41,9 +41,9 @@ const Menu = () => {
               Orders
             </Link>
           )}
-          <Link href={'/cart'} onClick={() => setOpen(false)}>
+          <div onClick={() => setOpen(false)}>
             <CartIcon />
-          </Link>
+          </div>
         </div>
       )}
     </div>
