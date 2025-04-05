@@ -1,40 +1,60 @@
 'use client';
 
+import { ProductType } from '@/types/types';
+import { useCartStore } from '@/utils/store';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
-type Props = {
-  price: number;
-  id: number;
-  options?: { title: string; additionalPrice: number }[];
-};
-
-const Price = ({ price, id, options }: Props) => {
-  const [total, setTotal] = useState(price);
+const Price = ({ product }: { product: ProductType }) => {
+  const [total, setTotal] = useState(+product.price);
   const [quantity, setQuantity] = useState(1);
   const [selected, setSelected] = useState(0);
 
-  useEffect(() => {
-    setTotal(quantity * (options ? price + options[selected].additionalPrice : price));
-  }, [quantity, selected, options, price]);
+  const { addToCart } = useCartStore();
 
+  useEffect(() => {
+    useCartStore.persist.rehydrate();
+  }, []);
+
+  useEffect(() => {
+    setTotal(
+      quantity *
+        (product.options?.length
+          ? +product.price + +product.options[selected].additionalPrice
+          : product.price)
+    );
+  }, [quantity, selected, product]);
+
+  const handleCart = () => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      img: product.img,
+      price: total,
+      optionTitle: product.options?.length ? product.options[selected].title : undefined,
+      quantity: quantity,
+    });
+    toast.success('The product added to the cart');
+  };
   return (
     <div className='flex flex-col gap-4'>
       <h2 className='text-2xl font-bold'>${total.toFixed(2)}</h2>
 
       <div className='flex gap-4'>
-        {options?.map((option, index) => (
-          <button
-            key={option.title}
-            className='min-w-[6rem] p-2 ring-1 ring-red-400 rounded-md cursor-pointer'
-            style={{
-              background: selected === index ? 'rgb(248 113 113)' : 'white',
-              color: selected === index ? 'white' : 'red',
-            }}
-            onClick={() => setSelected(index)}
-          >
-            {option.title}
-          </button>
-        ))}
+        {product.options?.length &&
+          product.options?.map((option, index) => (
+            <button
+              key={option.title}
+              className='min-w-[6rem] p-2 ring-1 ring-red-400 rounded-md cursor-pointer'
+              style={{
+                background: selected === index ? 'rgb(248 113 113)' : 'white',
+                color: selected === index ? 'white' : 'red',
+              }}
+              onClick={() => setSelected(index)}
+            >
+              {option.title}
+            </button>
+          ))}
       </div>
 
       <div className='flex justify-between items-center'>
@@ -57,7 +77,10 @@ const Price = ({ price, id, options }: Props) => {
           </div>
         </div>
 
-        <button className='uppercase w-56 bg-red-500 text-white p-3 ring-1 ring-red-500'>
+        <button
+          className='uppercase w-56 bg-red-500 text-white p-3 ring-1 ring-red-500'
+          onClick={handleCart}
+        >
           Add to Cart
         </button>
       </div>
